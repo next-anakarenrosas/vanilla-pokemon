@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokémon Capture</title>
+</head>
+
+<body>
+    <h1>Pokémon Capture v1.0</h1>
+    <h3 id="counter" class="text-end">Contador de Capturas: 0</h3>
+    <button class="btn" onclick="getPokemons()">Get Pokemons</button>
+    <div id="app"></div>
+
+</body>
+<script>
+    let pokemonList = []
+    let totalCapturas = 0;
+    function getPokemons() {
+        console.log('getPokemons!')
+        fetch('https://pokeapi.co/api/v2/pokemon')
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (data) {
+                data.results.forEach(pokemon => {
+                    fetch(`https://pokeapi.co/api/v2/pokemon/${pokemon.name}`)
+                        .then(response => {
+                            return response.json()
+                        })
+                        .then(data => {
+                            let id = data.id;
+                            let name = data.name;
+                            let type = data.types[0].type.name;
+                            let abilities = data.abilities.map(ability => ability.ability.name);
+                            let experience = data.base_experience;
+                            let image = data.sprites.front_default;
+                            let height = data.height;
+                            let weight = data.weight;
+                            let moves = data.moves.slice(0, 3).map(move => move.move.name);
+
+                            pokemonList.push({
+                                id,
+                                name,
+                                type,
+                                abilities,
+                                experience,
+                                image,
+                                height,
+                                weight,
+                                moves,
+                                captured: false
+                            });
+                            paint()
+                        })
+                })
+
+            });
+    }
+
+    function generatePokemonCard(pokemon) {
+        let template = `
+            <div class="card">
+                <h3 class="title">${pokemon.name}</h3>
+                <h5>Id. ${pokemon.id}</h5>
+                <div class="card-content">
+                    <img src="${pokemon.image}"/>
+                    <ul>
+                        <li>Type: ${pokemon.type}</li>
+                        <li>Height: ${pokemon.height}</li>
+                        <li>Height: ${pokemon.weight}</li>
+                    </ul>
+                </div>
+            <button id="btn-action" onclick="capturarPokemon(event)">Capturar</button>
+            </div>
+         `
+        return template
+    }
+
+    function capturarPokemon(event){
+        let btn = event.target
+        if(btn.innerText == "Capturar"){
+            totalCapturas++
+            btn.innerText = "Liberar"
+        }else{
+            totalCapturas--
+            btn.innerText = "Capturar"
+        }
+        
+        document.getElementById('counter').innerText = `Contador de Capturas: ${totalCapturas}`
+        
+    }
+
+    function paint() {
+        let elem = document.getElementById('app')
+        let template = ""
+        pokemonList.forEach((pokemon) => {
+            template = template + generatePokemonCard(pokemon)
+        })
+        elem.innerHTML = template
+    }
+
+
+</script>
+
+<style>
+    #app {
+        width: 90%;
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+    }
+
+    h3,h5{
+        margin: 0;
+    }
+
+    .title{
+        text-transform: capitalize;
+    }
+
+    .card {
+        width: 300px;
+        border-radius: 10px;
+        padding: .7rem;
+        box-shadow: 1px 1px 10px black;
+        margin-bottom: 1rem;
+    }
+
+    .card-content {
+        display: flex;
+        flex-direction: row-reverse;
+    }
+
+    .btn {
+        margin-bottom: 1rem;
+    }
+
+    .text-end {
+        text-align: end;
+    }
+</style>
+
+</html>
